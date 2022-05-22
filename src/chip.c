@@ -162,15 +162,15 @@ void c8_8XY4(){
 	c8_VX[c8_X] = (res & 0xFF);
 }
 void c8_8XY5(){
-	c8_VX[0xF] = (c8_VX[c8_X] > c8_VX[c8_Y]);
-	c8_VX[c8_X] = c8_VX[c8_Y] - c8_VX[c8_X];
+	if(c8_VX[c8_X] > c8_VX[c8_Y]) c8_VX[0xF] = 1; else c8_VX[0xF] = 0;
+	c8_VX[c8_X] = c8_VX[c8_X] - c8_VX[c8_Y];
 }
 void c8_8XY6(){
 	if((c8_VX[c8_X] & 0x01)) c8_VX[0xF] = 1; else c8_VX[0xF] = 0;
 	c8_VX[c8_X] = (c8_VX[c8_X] >> 1);
 }
 void c8_8XY7(){
-	c8_VX[0xF] = (c8_VX[c8_Y] > c8_VX[c8_X]);
+	if(c8_VX[c8_Y] > c8_VX[c8_X]) c8_VX[0xF] = 1; else c8_VX[0xF] = 0;
 	c8_VX[c8_X] = c8_VX[c8_X] - c8_VX[c8_Y];
 }
 void c8_8XYE(){
