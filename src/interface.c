@@ -43,8 +43,7 @@ int keypad_input(uint8_t* keypad){
 		switch(e.type){
 			case SDL_QUIT: {
 				q = 1;
-				break;
-			}
+			} break;
 			case SDL_KEYDOWN: {
 				SDL_Keycode k = e.key.keysym.sym;
 				uint8_t kp;
@@ -55,8 +54,8 @@ int keypad_input(uint8_t* keypad){
 						break;
 					}
 				}
-				break;
-			}
+				printf("press   %d\n", kp);
+			} break;
 			case SDL_KEYUP: {
 				SDL_Keycode k = e.key.keysym.sym;
 				uint8_t kp;
@@ -66,8 +65,8 @@ int keypad_input(uint8_t* keypad){
 						break;
 					}
 				}
-				break;
-			}
+				printf("release %d\n", kp);
+			} break;
 		}
 	}
 

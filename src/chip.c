@@ -6,6 +6,9 @@ uint8_t c8_SP, c8_DELAY, c8_SOUND;
 uint16_t c8_STACK[16];
 uint8_t c8_keypad[16];
 
+float c8_delay_freq = 60;
+uint32_t c8_cps = 10000;
+
 uint8_t c8_font[16*5] = {
 	0xF0, 0x90, 0x90, 0x90, 0xF0,
 	0x20, 0x60, 0x20, 0x20, 0x70,
@@ -79,12 +82,13 @@ void c8_load_font(char* filename){
 	fclose(fp);
 }
 
-void c8_load_file(char* filename){
+int c8_load_file(char* filename){
 	FILE* fp = fopen(filename, "r");
-	if(!fp){ printf("Failed to open file %s\n", filename); return; }
+	if(!fp){ printf("Failed to open file %s\n", filename); return 1; }
 	fseek(fp, 0, SEEK_SET);
 	fread(c8_RAM + 0x200, sizeof(uint8_t), 0xE00, fp);
 	fclose(fp);
+	return 0;
 }
 
 void c8_op_init(){
@@ -238,8 +242,8 @@ void c8_cycle(){
 	c8_fetch();
 	c8_PC += 2;
 	c8_execute();
-	if(c8_DELAY) --c8_DELAY;
-	if(c8_SOUND) --c8_SOUND;
+	//if(c8_DELAY) --c8_DELAY;
+	//if(c8_SOUND) --c8_SOUND;
 }
 
 void c8_fetch(){

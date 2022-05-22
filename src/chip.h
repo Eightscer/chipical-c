@@ -7,6 +7,9 @@
 #include <string.h>
 #include <time.h>
 
+extern float c8_delay_freq;
+extern uint32_t c8_cps;
+
 extern uint16_t c8_I, c8_PC;
 extern uint8_t c8_VX[16];
 extern uint8_t c8_SP, c8_DELAY, c8_SOUND;
@@ -38,7 +41,7 @@ extern uint32_t c8_1_color;
 int c8_init();
 void c8_op_init();
 void c8_load_font(char* filename);
-void c8_load_file(char* filename);
+int c8_load_file(char* filename);
 
 void c8_cycle();
 void c8_fetch();
