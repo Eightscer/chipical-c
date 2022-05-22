@@ -30,9 +30,11 @@ uint16_t c8_OP;
 uint8_t c8_X;
 uint8_t c8_Y;
 uint8_t* c8_RAM;
-uint8_t* c8_VRAM;
+uint32_t* c8_VRAM;
 uint8_t c8_scrw;
 uint8_t c8_scrh;
+uint32_t c8_0_color;
+uint32_t c8_1_color;
 
 op c8_opcodes_lut[0x10] = {c8_INVOP};
 op c8_opcode0_lut[0x10] = {c8_0NNN};
@@ -43,7 +45,7 @@ op c8_opcodeF_lut[0x100] = {c8_INVOP};
 int c8_init(){
 	srand(time(NULL));
 
-	c8_PC = 0x0000;	c8_I = 0x0000;
+	c8_PC = 0x0200;	c8_I = 0x0000;
 	c8_SP = 0x00; c8_DELAY = 0x00; c8_SOUND = 0x00;
 	int i; for(i = 0; i < 16; ++i){
 		c8_VX[i] = 0x00;
@@ -53,12 +55,18 @@ int c8_init(){
 
 	c8_op_init();
 
+	c8_scrh = 32;
+	c8_scrw = 64;
+
+	c8_0_color = 0x00000000;
+	c8_1_color = 0x00FF7F00;
+
 	if(c8_RAM){ free(c8_RAM); }
 	if(c8_VRAM){ free(c8_VRAM); }
 	c8_RAM = (uint8_t*)calloc(0x1000, sizeof(uint8_t));
-	if(!c8_RAM){ return -1; }
-	c8_VRAM = (uint8_t*)calloc(c8_scrw*c8_scrh, sizeof(uint8_t));
-	if(!c8_VRAM){ return -1; }
+	if(!c8_RAM){ printf("RAM not free\n"); return -1; }
+	c8_VRAM = (uint32_t*)calloc(c8_scrw*c8_scrh, sizeof(uint32_t));
+	if(!c8_VRAM){ printf("VRAM not free\n"); return -1; }
 
 	memcpy(c8_RAM + c8_font_start, c8_font, sizeof(c8_font));
 
@@ -68,6 +76,14 @@ int c8_init(){
 void c8_load_font(char* filename){
 	FILE* fp = fopen(filename, "r");
 	
+	fclose(fp);
+}
+
+void c8_load_file(char* filename){
+	FILE* fp = fopen(filename, "r");
+	if(!fp){ printf("Failed to open file %s\n", filename); return; }
+	fseek(fp, 0, SEEK_SET);
+	fread(c8_RAM + 0x200, sizeof(uint8_t), 0xE00, fp);
 	fclose(fp);
 }
 
@@ -125,7 +141,7 @@ void c8_opF(){c8_opcodeF_lut[(c8_OP & 0x00FF)]();}
 void c8_INVOP(){ printf("bruh moment\n"); }
 
 void c8_0NNN(){ printf("bro you just posted cringe\n"); }
-void c8_00E0(){ memset(c8_VRAM, 0, c8_scrw*c8_scrh*sizeof(c8_VRAM[0])); }
+void c8_00E0(){ memset(c8_VRAM, 0, c8_scrw*c8_scrh*sizeof(uint32_t)); }
 void c8_00EE(){ --c8_SP; c8_PC = c8_STACK[c8_SP]; }
 
 void c8_1NNN(){ c8_PC = (c8_OP & 0x0FFF); }
@@ -174,10 +190,10 @@ void c8_DXYN(){
 		for(c = 0; c < 8; ++c){
 			uint8_t font_pixel = (font_row & (0x80 >> c));
 			uint32_t i = (((c8_VX[c8_Y] + r) % c8_scrh) * c8_scrw) \
-				* ((c8_VX[c8_X] + c) % c8_scrw);
+				+ ((c8_VX[c8_X] + c) % c8_scrw);
 			if(font_pixel){
-				if(c8_VRAM[i] == 0xFF) c8_VX[0xF] = 1;
-				c8_VRAM[i] ^= 0xFF;
+				if(c8_VRAM[i] == c8_1_color) c8_VX[0xF] = 1;
+				c8_VRAM[i] ^= c8_1_color;
 			}
 		}
 	}
@@ -218,9 +234,21 @@ void c8_FX65(){
 		c8_VX[i] = *(c8_RAM + c8_I + i);
 }
 
-void c8_execute(){
+void c8_cycle(){
+	c8_fetch();
+	c8_PC += 2;
+	c8_execute();
+	if(c8_DELAY) --c8_DELAY;
+	if(c8_SOUND) --c8_SOUND;
+}
+
+void c8_fetch(){
+	c8_OP = ((c8_RAM[c8_PC] << 8) | c8_RAM[c8_PC + 1]);
 	c8_X = ((c8_OP & 0x0F00) >> 8);
-	c8_Y = ((c8_OP & 0x00F0) >> 4);
+	c8_Y = ((c8_OP & 0x00F0) >> 4); 
+}
+
+void c8_execute(){
 	c8_opcodes_lut[(c8_OP & 0xF000) >> 12]();
 }
 

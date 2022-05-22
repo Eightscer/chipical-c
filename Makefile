@@ -1,9 +1,9 @@
 TARGET	= chipical
 
 CC		= gcc
-CFLAGS	= -Wall -O0 -lncurses
+CFLAGS	= -Wall -O0
 LINKER	= gcc
-LFLAGS	= -Wall
+LFLAGS	= -Wall -lSDL2 -lncurses
 
 SRCDIR	= src
 OBJDIR	= obj

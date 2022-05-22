@@ -27,20 +27,25 @@ extern op c8_opcodeE_lut[0x10];
 extern op c8_opcodeF_lut[0x100];
 
 extern uint8_t* c8_RAM;
-extern uint8_t* c8_VRAM;
+extern uint32_t* c8_VRAM;
 
 extern uint8_t c8_scrw;
 extern uint8_t c8_scrh;
 
+extern uint32_t c8_0_color;
+extern uint32_t c8_1_color;
+
 int c8_init();
 void c8_op_init();
 void c8_load_font(char* filename);
+void c8_load_file(char* filename);
 
+void c8_cycle();
 void c8_fetch();
 void c8_decode();
-void c8_deinit();
-
 void c8_execute();
+
+void c8_deinit();
 
 void c8_INVOP();
 
