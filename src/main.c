@@ -18,11 +18,24 @@ int main(int argc, char** argv){
 	clock_t t_start, t_end, t_accum;
 	clock_t cpf = CLOCKS_PER_SEC / (c8_delay_freq*10);
 	t_accum = 0;
+	uint32_t dcc = 0;
+	//uint32_t delay_per_sec;
+	//uint32_t avg_cps;
 	while(!q){
 		t_start = clock();
 		q = keypad_input(c8_keypad);
 		c8_cycle();
 		update_gfx();
+		//clock_t delay = (CLOCKS_PER_SEC/c8_cps) - (clock() - t_start);
+		//printf("%zu\n", delay);
+		if(debug_enable){
+			++dcc;
+			if(dcc >= cycles_until_update){
+				update_debug();
+				dcc = 0;		
+			}
+		}
+
 		t_end = clock();
 		t_accum += t_end - t_start;
 		if(t_accum > cpf){
@@ -30,8 +43,8 @@ int main(int argc, char** argv){
 			//printf("%zu, %zu\n", t_accum, cpf);
 			t_accum -= cpf;
 		}
-		//clock_t delay = (CLOCKS_PER_SEC/c8_cps) - (clock() - t_start);
-		//printf("%zu\n", delay);
+
+		//t_accum += clock() - t_start;
 		usleep(CLOCKS_PER_SEC/c8_cps);
 		
 	}

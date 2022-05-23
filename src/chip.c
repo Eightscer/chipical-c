@@ -7,7 +7,7 @@ uint16_t c8_STACK[16];
 uint8_t c8_keypad[16];
 
 float c8_delay_freq = 60;
-uint32_t c8_cps = 10000;
+uint32_t c8_cps = 1000;
 
 uint8_t c8_font[16*5] = {
 	0xF0, 0x90, 0x90, 0x90, 0xF0,
