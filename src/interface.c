@@ -14,7 +14,7 @@ SDL_Keycode keypad_mapping[16] = {
 };
 
 void interface_init(){
-	scaling = 4;
+	scaling = 8;
 	SDL_Init(SDL_INIT_VIDEO);
 	gfx_win = SDL_CreateWindow("Chipical", 0, 0, c8_scrw*scaling, c8_scrh*scaling, SDL_WINDOW_SHOWN);
 	render = SDL_CreateRenderer(gfx_win, -1, SDL_RENDERER_SOFTWARE);
@@ -29,10 +29,12 @@ void interface_deinit(){
 }
 
 void update_gfx(){
+	if((c8_OP == 0x00E0) || (c8_OP & 0xF000) == 0xD000){
 	SDL_UpdateTexture(texture, NULL, c8_VRAM, (sizeof(c8_VRAM[0])*c8_scrw));
 	SDL_RenderClear(render);
 	SDL_RenderCopy(render, texture, NULL, NULL);
 	SDL_RenderPresent(render);
+	}
 }
 
 int keypad_input(uint8_t* keypad){
@@ -54,7 +56,7 @@ int keypad_input(uint8_t* keypad){
 						break;
 					}
 				}
-				printf("press   %d\n", kp);
+				//printf("press   %d\n", kp);
 			} break;
 			case SDL_KEYUP: {
 				SDL_Keycode k = e.key.keysym.sym;
@@ -65,7 +67,7 @@ int keypad_input(uint8_t* keypad){
 						break;
 					}
 				}
-				printf("release %d\n", kp);
+				//printf("release %d\n", kp);
 			} break;
 		}
 	}

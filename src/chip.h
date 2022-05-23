@@ -48,6 +48,8 @@ void c8_fetch();
 void c8_decode();
 void c8_execute();
 
+void c8_update_timer();
+
 void c8_deinit();
 
 void c8_INVOP();

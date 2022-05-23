@@ -256,6 +256,11 @@ void c8_execute(){
 	c8_opcodes_lut[(c8_OP & 0xF000) >> 12]();
 }
 
+void c8_update_timer(){
+	if(c8_DELAY) --c8_DELAY;
+	if(c8_SOUND) --c8_SOUND;
+}
+
 void c8_deinit(){
 	if(c8_RAM){ free(c8_RAM); }
 	if(c8_VRAM){ free(c8_VRAM); }

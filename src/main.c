@@ -1,6 +1,7 @@
 #include "chip.h"
 #include "interface.h"
 #include <unistd.h>
+#include <time.h>
 
 int main(int argc, char** argv){
 	if(c8_init()) return 1;
@@ -13,34 +14,26 @@ int main(int argc, char** argv){
 	}
 	int q = 0;
 	//float t_elap_cycle = 0;
-	float t_elap_delay = 0;
+	//float t_elap_delay = 0;
+	clock_t t_start, t_end, t_accum;
+	clock_t cpf = CLOCKS_PER_SEC / (c8_delay_freq*10);
+	t_accum = 0;
 	while(!q){
-		uint32_t t_start = SDL_GetPerformanceCounter();
+		t_start = clock();
 		q = keypad_input(c8_keypad);
 		c8_cycle();
 		update_gfx();
-		uint32_t t_end = SDL_GetPerformanceCounter();
-		float elap = (t_end - t_start) / (float)SDL_GetPerformanceFrequency();
-
-		//t_elap_cycle = elap;
-		t_elap_delay += elap;
-
-		if(t_elap_delay > 1.0 / c8_delay_freq){
-			if(c8_DELAY) --c8_DELAY;
-			if(c8_SOUND) --c8_SOUND;
-			t_elap_delay -= 1.0 / c8_delay_freq;
-			printf("delay hit\n");
+		t_end = clock();
+		t_accum += t_end - t_start;
+		if(t_accum > cpf){
+			c8_update_timer();
+			//printf("%zu, %zu\n", t_accum, cpf);
+			t_accum -= cpf;
 		}
-
-		//uint32_t wtf = (uint32_t)(((float)SDL_GetPerformanceFrequency() / (float)c8_cps)) - t_elap_cycle;
-
-		//usleep((uint32_t)(((float)SDL_GetPerformanceFrequency() / (float)c8_cps)) - t_elap_cycle);
-		usleep((1000000*c8_cps) / SDL_GetPerformanceFrequency());
-
-		//printf("%f     %f     %f\n", t_elap_cycle, t_elap_delay, elap);
-		//printf("%d\n", wtf);
-		//SDL_Delay((uint32_t)(16.666f - t_elapsed));
-		//printf("%04x    %04x\n", c8_PC, c8_OP);
+		//clock_t delay = (CLOCKS_PER_SEC/c8_cps) - (clock() - t_start);
+		//printf("%zu\n", delay);
+		usleep(CLOCKS_PER_SEC/c8_cps);
+		
 	}
 	printf("deinit interface\n");
 	interface_deinit();
