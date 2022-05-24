@@ -36,7 +36,7 @@ void interface_init(){
 }
 
 void interface_deinit(){
-	if(debug_enable) rm_win(debug_win);
+	if(debug_win) rm_win(debug_win);
 	endwin();
 	SDL_DestroyTexture(texture);
 	SDL_DestroyRenderer(render);
@@ -103,6 +103,7 @@ void rm_win(WINDOW* win){
 	wrefresh(win);
 	delwin(win);
 }
+
 void init_debug(){
 	int i, r, c;
 	r = 1; c = 5;
