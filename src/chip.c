@@ -141,10 +141,19 @@ void c8_INVOP(){ printf("bruh moment\n"); }
 
 void c8_0NNN(){ printf("bro you just posted cringe\n"); }
 void c8_00E0(){ memset(c8_VRAM, 0, c8_scrw*c8_scrh*sizeof(uint32_t)); }
-void c8_00EE(){ --c8_SP; c8_PC = c8_STACK[c8_SP]; }
+void c8_00EE(){
+	--c8_SP;
+	if(c8_SP > 0xF){ c8_ex = STACK_POINTER_OOB; return; }
+	c8_PC = c8_STACK[c8_SP];
+}
 
 void c8_1NNN(){ c8_PC = (c8_OP & 0x0FFF); }
-void c8_2NNN(){ c8_STACK[c8_SP] = c8_PC; ++c8_SP; c8_PC = (c8_OP & 0x0FFF); }
+void c8_2NNN(){
+	if(c8_SP > 0xF){ c8_ex = STACK_POINTER_OOB; return; }
+	c8_STACK[c8_SP] = c8_PC;
+	++c8_SP;
+	c8_PC = (c8_OP & 0x0FFF);
+}
 void c8_3XKK(){ if(c8_VX[c8_X] == (c8_OP & 0xFF)) c8_PC += 2; }
 void c8_4XKK(){ if(c8_VX[c8_X] != (c8_OP & 0xFF)) c8_PC += 2; }
 void c8_5XY0(){ if(c8_VX[c8_X] == c8_VX[c8_Y])    c8_PC += 2; }

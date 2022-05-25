@@ -189,7 +189,8 @@ void handle_exception(){
 			break;
 		default: return;
 	}
-	mvprintw(20, 30, "%s", exmsg);
+	mvprintw(20, 30, "Exception occurred:");
+	mvprintw(21, 30, "%s", exmsg);
 	refresh();
 	c8_pause = 1;
 }
