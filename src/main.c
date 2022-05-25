@@ -22,31 +22,34 @@ int main(int argc, char** argv){
 	//uint32_t delay_per_sec;
 	//uint32_t avg_cps;
 	while(!q){
-		t_start = clock();
-		q = keypad_input(c8_keypad);
-		c8_cycle();
-		update_gfx();
-		//clock_t delay = (CLOCKS_PER_SEC/c8_cps) - (clock() - t_start);
-		//printf("%zu\n", delay);
-		if(debug_enable){
-			++dcc;
-			if(dcc >= cycles_until_update){
-				update_debug();
-				dcc = 0;		
+		if(!c8_pause){
+			t_start = clock();
+			q = keypad_input(c8_keypad);
+			c8_cycle();
+			handle_exception();
+			if(c8_pause){ if(debug_enable) update_debug(); continue; }
+			update_gfx();
+			//clock_t delay = (CLOCKS_PER_SEC/c8_cps) - (clock() - t_start);
+			//printf("%zu\n", delay);
+			if(debug_enable){
+				++dcc;
+				if(dcc >= cycles_until_update){
+					update_debug();
+					dcc = 0;		
+				}
 			}
-		}
 
-		t_end = clock();
-		t_accum += t_end - t_start;
-		if(t_accum > cpf){
-			c8_update_timer();
-			//printf("%zu, %zu\n", t_accum, cpf);
-			t_accum -= cpf;
-		}
+			t_end = clock();
+			t_accum += t_end - t_start;
+			if(t_accum > cpf){
+				c8_update_timer();
+				//printf("%zu, %zu\n", t_accum, cpf);
+				t_accum -= cpf;
+			}
 
-		//t_accum += clock() - t_start;
-		usleep(CLOCKS_PER_SEC/c8_cps);
-		
+			//t_accum += clock() - t_start;
+			usleep(CLOCKS_PER_SEC/c8_cps);
+		} else { usleep(1000); keypad_input(c8_keypad); }
 	}
 	printf("deinit interface\n");
 	interface_deinit();

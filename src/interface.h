@@ -1,6 +1,7 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
+#include <string.h>
 #include <ncurses.h>
 #include <SDL2/SDL.h>
 
@@ -12,12 +13,14 @@ WINDOW* new_win(int h, int w, int sy, int sx);
 void rm_win(WINDOW* win);
 void update_debug();
 void init_debug();
+void handle_exception();
 
 extern SDL_Keycode keypad_mapping[16];
 extern size_t scaling;
 extern uint32_t cycles_until_update;
 extern WINDOW* debug_win;
 extern int debug_enable;
+extern int c8_pause;
 
 void interface_init();
 void interface_deinit();

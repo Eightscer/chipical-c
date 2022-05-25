@@ -7,6 +7,19 @@
 #include <string.h>
 #include <time.h>
 
+typedef void (*op)();
+
+typedef enum {
+	ALL_OK,
+	STACK_POINTER_OOB,
+	PROGRAM_COUNTER_OOB,
+	INDEX_OUT_OF_BOUNDS,
+	UNKNOWN_OPCODE
+} c8_exception;
+
+extern c8_exception c8_ex;
+extern op c8_INSTR;
+
 extern float c8_delay_freq;
 extern uint32_t c8_cps;
 
@@ -22,7 +35,6 @@ extern uint16_t c8_OP;
 extern uint8_t c8_X;
 extern uint8_t c8_Y;
 
-typedef void (*op)();
 extern op c8_opcodes_lut[0x10];
 extern op c8_opcode0_lut[0x10];
 extern op c8_opcode8_lut[0x10];

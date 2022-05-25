@@ -6,6 +6,9 @@ uint8_t c8_SP, c8_DELAY, c8_SOUND;
 uint16_t c8_STACK[16];
 uint8_t c8_keypad[16];
 
+op c8_INSTR = c8_INVOP;
+c8_exception c8_ex = ALL_OK;
+
 float c8_delay_freq = 60;
 uint32_t c8_cps = 1000;
 

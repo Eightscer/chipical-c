@@ -8,6 +8,7 @@ size_t scaling;
 uint32_t cycles_until_update;
 WINDOW* debug_win;
 int debug_enable;
+int c8_pause = 0;
 
 SDL_Keycode keypad_mapping[16] = {
 	SDLK_x, SDLK_1, SDLK_2, SDLK_3,
@@ -168,4 +169,27 @@ void update_debug(){
 		c8_keypad[0xA], c8_keypad[0x0], c8_keypad[0xB], c8_keypad[0xF]);
 	
 	refresh();
+}
+
+void handle_exception(){
+	char exmsg[32];
+	switch(c8_ex){
+		case ALL_OK: return;
+		case INDEX_OUT_OF_BOUNDS:
+			strncpy(exmsg, "INDEX OUT OF BOUNDS\0", 32);
+			break;
+		case STACK_POINTER_OOB:
+			strncpy(exmsg, "STACK POINTER OOB\0", 32);
+			break;
+		case PROGRAM_COUNTER_OOB:
+			strncpy(exmsg, "PROGRAM COUNTER OOB\0", 32);
+			break;
+		case UNKNOWN_OPCODE:
+			strncpy(exmsg, "UNKNOWN OPCODE\0", 32);
+			break;
+		default: return;
+	}
+	mvprintw(20, 30, "%s", exmsg);
+	refresh();
+	c8_pause = 1;
 }
