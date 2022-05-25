@@ -64,8 +64,11 @@ int c8_init(){
 	c8_scrh = 32;
 	c8_scrw = 64;
 
-	c8_0_color = 0x7F00FF00;
-	c8_1_color = 0x00FF7F00;
+	//c8_0_color = 0x7F00FF00;
+	//c8_1_color = 0x00FF7F00;
+
+	c8_0_color = 0x00000000;
+	c8_1_color = 0xFFFFFF00;
 
 	// TODO: Allow config file to alter some of these initial values
 	
@@ -140,7 +143,13 @@ void c8_init_op_lut(){
 void c8_INVOP(){ printf("bruh moment\n"); }
 
 void c8_0NNN(){ printf("bro you just posted cringe\n"); }
-void c8_00E0(){ memset(c8_VRAM, 0, c8_scrw*c8_scrh*sizeof(uint32_t)); }
+void c8_00E0(){
+	//memset(c8_VRAM, c8_0_color, c8_scrw*c8_scrh*sizeof(uint32_t));
+	uint32_t i;
+	for(i = 0; i < c8_scrw*c8_scrh; ++i){
+		c8_VRAM[i] = c8_0_color;
+	}
+}
 void c8_00EE(){
 	--c8_SP;
 	if(c8_SP > 0xF){ c8_ex = STACK_POINTER_OOB; return; }
@@ -201,8 +210,10 @@ void c8_DXYN(){
 			uint32_t i = (((c8_VX[c8_Y] + r) % c8_scrh) * c8_scrw) \
 				+ ((c8_VX[c8_X] + c) % c8_scrw);
 			if(font_pixel){
-				if(c8_VRAM[i] == c8_1_color) c8_VX[0xF] = 1;
-				c8_VRAM[i] ^= c8_1_color;
+				if(c8_VRAM[i] == c8_1_color){
+					c8_VX[0xF] = 1;
+					c8_VRAM[i] = c8_0_color;
+				} else { c8_VRAM[i] = c8_1_color; }
 			}
 		}
 	}

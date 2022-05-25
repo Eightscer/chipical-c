@@ -6,6 +6,7 @@
 int main(int argc, char** argv){
 	if(c8_init()) return 1;
 	interface_init();
+	c8_00E0();
 	update_gfx();
 	if(argc > 1){
 		if(c8_load_file(argv[1])) return 1;
@@ -28,6 +29,11 @@ int main(int argc, char** argv){
 			c8_cycle();
 			handle_exception();
 			if(c8_pause){ if(debug_enable) update_debug(); continue; }
+
+			// Messing with colors
+			//c8_0_color += 0x100;
+			//c8_1_color += 0x100;
+			
 			update_gfx();
 			//clock_t delay = (CLOCKS_PER_SEC/c8_cps) - (clock() - t_start);
 			//printf("%zu\n", delay);

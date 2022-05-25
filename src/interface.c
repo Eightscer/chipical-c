@@ -46,7 +46,7 @@ void interface_deinit(){
 }
 
 void update_gfx(){
-	if((c8_OP == 0x00E0) || (c8_OP & 0xF000) == 0xD000){
+	if(c8_INSTR == c8_00E0 || c8_INSTR == c8_DXYN){
 	SDL_UpdateTexture(texture, NULL, c8_VRAM, (sizeof(c8_VRAM[0])*c8_scrw));
 	SDL_RenderClear(render);
 	SDL_RenderCopy(render, texture, NULL, NULL);
