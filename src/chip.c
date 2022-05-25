@@ -185,6 +185,7 @@ void c8_DXYN(){
 	c8_VX[0xF] = 0;
 	uint8_t r, c;
 	for(r = 0; r < (c8_OP & 0xF); ++r){
+		if(c8_I + r > 0xFFF){ c8_ex = INDEX_OUT_OF_BOUNDS; return; }
 		uint8_t font_row = c8_RAM[c8_I + r];
 		for(c = 0; c < 8; ++c){
 			uint8_t font_pixel = (font_row & (0x80 >> c));
@@ -218,23 +219,31 @@ void c8_FX18(){ c8_SOUND = c8_VX[c8_X]; }
 void c8_FX1E(){ c8_I += c8_VX[c8_X]; }
 void c8_FX29(){ c8_I = c8_font_start + (c8_VX[c8_X] * 5); }
 void c8_FX33(){
+	if(c8_I > 0xFFD){ c8_ex = INDEX_OUT_OF_BOUNDS; return; }
 	c8_RAM[c8_I]     = (c8_VX[c8_X] / 100);
 	c8_RAM[c8_I + 1] = ((c8_VX[c8_X] % 100) / 10);
 	c8_RAM[c8_I + 2] = (c8_VX[c8_X] % 10);
 }
 void c8_FX55(){
 	uint8_t i;
-	for(i = 0; i <= c8_X; ++i)
+	for(i = 0; i <= c8_X; ++i){
+		if(c8_I + i > 0xFFF){ c8_ex = INDEX_OUT_OF_BOUNDS; return; }
 		*(c8_RAM + c8_I + i) = c8_VX[i];
+	}
 }
 void c8_FX65(){
 	uint8_t i;
-	for(i = 0; i <= c8_X; ++i)
-		c8_VX[i] = *(c8_RAM + c8_I + i);
+	for(i = 0; i <= c8_X; ++i){
+		if(c8_I + i > 0xFFF){ c8_ex = INDEX_OUT_OF_BOUNDS; return; }
+		c8_VX[i] = *(c8_RAM + c8_I + i);		
+	}
 }
 
 void c8_cycle(){
 	c8_fetch();
+	if(c8_ex != ALL_OK) return;
+	if(c8_INSTR == c8_INVOP){ c8_ex = UNKNOWN_OPCODE; return; }
+	if(c8_PC > 0x0FFE){ c8_ex = PROGRAM_COUNTER_OOB; return; }
 	c8_PC += 2;
 	(c8_INSTR)();
 	//if(c8_DELAY) --c8_DELAY;

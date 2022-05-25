@@ -49,7 +49,7 @@ int main(int argc, char** argv){
 
 			//t_accum += clock() - t_start;
 			usleep(CLOCKS_PER_SEC/c8_cps);
-		} else { usleep(1000); keypad_input(c8_keypad); }
+		} else { usleep(1000); q = keypad_input(c8_keypad); }
 	}
 	printf("deinit interface\n");
 	interface_deinit();
