@@ -51,14 +51,12 @@ extern uint32_t c8_0_color;
 extern uint32_t c8_1_color;
 
 int c8_init();
-void c8_op_init();
+void c8_init_op_lut();
 void c8_load_font(char* filename);
 int c8_load_file(char* filename);
 
 void c8_cycle();
 void c8_fetch();
-void c8_decode();
-void c8_execute();
 
 void c8_update_timer();
 
@@ -66,7 +64,6 @@ void c8_deinit();
 
 void c8_INVOP();
 
-void c8_op0();
 void c8_00E0();
 void c8_00EE();
 void c8_0NNN();
@@ -79,7 +76,6 @@ void c8_5XY0();
 void c8_6XKK();
 void c8_7XKK();
 
-void c8_op8();
 void c8_8XY0();
 void c8_8XY1();
 void c8_8XY2();
@@ -96,11 +92,9 @@ void c8_BNNN();
 void c8_CXKK();
 void c8_DXYN();
 
-void c8_opE();
 void c8_EX9E();
 void c8_EXA1();
 
-void c8_opF();
 void c8_FX07();
 void c8_FX0A();
 void c8_FX15();

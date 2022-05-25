@@ -59,13 +59,17 @@ int c8_init(){
 		c8_keypad[i] = 0x00;
 	}
 
-	c8_op_init();
+	c8_init_op_lut();
 
 	c8_scrh = 32;
 	c8_scrw = 64;
 
-	c8_0_color = 0x00000000;
+	c8_0_color = 0x7F00FF00;
 	c8_1_color = 0x00FF7F00;
+
+	// TODO: Allow config file to alter some of these initial values
+	
+	if(c8_0_color == c8_1_color) ++c8_0_color;
 
 	if(c8_RAM){ free(c8_RAM); }
 	if(c8_VRAM){ free(c8_VRAM); }
@@ -79,6 +83,7 @@ int c8_init(){
 	return 0;
 }
 
+// Currently unused. Just some unnecessary customization option
 void c8_load_font(char* filename){
 	FILE* fp = fopen(filename, "r");
 	
@@ -94,24 +99,16 @@ int c8_load_file(char* filename){
 	return 0;
 }
 
-void c8_op_init(){
-
-	c8_opcodes_lut[0x0] = c8_op0;
-	c8_opcodes_lut[0x1] = c8_1NNN;
-	c8_opcodes_lut[0x2] = c8_2NNN;
-	c8_opcodes_lut[0x3] = c8_3XKK;
-	c8_opcodes_lut[0x4] = c8_4XKK;
-	c8_opcodes_lut[0x5] = c8_5XY0;
-	c8_opcodes_lut[0x6] = c8_6XKK;
-	c8_opcodes_lut[0x7] = c8_7XKK;
-	c8_opcodes_lut[0x8] = c8_op8;
-	c8_opcodes_lut[0x9] = c8_9XY0;
-	c8_opcodes_lut[0xA] = c8_ANNN;
-	c8_opcodes_lut[0xB] = c8_BNNN;
-	c8_opcodes_lut[0xC] = c8_CXKK;
-	c8_opcodes_lut[0xD] = c8_DXYN;
-	c8_opcodes_lut[0xE] = c8_opE;
-	c8_opcodes_lut[0xF] = c8_opF;
+void c8_init_op_lut(){
+	int i;
+	for(i = 0; i < 0x10; ++i){
+		c8_opcode0_lut[i] = c8_0NNN;
+		c8_opcode8_lut[i] = c8_INVOP;
+		c8_opcodeE_lut[i] = c8_INVOP;		
+	}
+	for(i = 0; i < 0x100; ++i){
+		c8_opcodeF_lut[i] = c8_INVOP;
+	}
 
 	c8_opcode0_lut[0x0] = c8_00E0;
 	c8_opcode0_lut[0xE] = c8_00EE;
@@ -139,11 +136,6 @@ void c8_op_init(){
 	c8_opcodeF_lut[0x55] = c8_FX55;
 	c8_opcodeF_lut[0x65] = c8_FX65;
 }
-
-void c8_op0(){c8_opcode0_lut[(c8_OP & 0x000F)]();}
-void c8_op8(){c8_opcode8_lut[(c8_OP & 0x000F)]();}
-void c8_opE(){c8_opcodeE_lut[(c8_OP & 0x000F)]();}
-void c8_opF(){c8_opcodeF_lut[(c8_OP & 0x00FF)]();}
 
 void c8_INVOP(){ printf("bruh moment\n"); }
 
@@ -244,7 +236,7 @@ void c8_FX65(){
 void c8_cycle(){
 	c8_fetch();
 	c8_PC += 2;
-	c8_execute();
+	(c8_INSTR)();
 	//if(c8_DELAY) --c8_DELAY;
 	//if(c8_SOUND) --c8_SOUND;
 }
@@ -252,11 +244,26 @@ void c8_cycle(){
 void c8_fetch(){
 	c8_OP = ((c8_RAM[c8_PC] << 8) | c8_RAM[c8_PC + 1]);
 	c8_X = ((c8_OP & 0x0F00) >> 8);
-	c8_Y = ((c8_OP & 0x00F0) >> 4); 
-}
-
-void c8_execute(){
-	c8_opcodes_lut[(c8_OP & 0xF000) >> 12]();
+	c8_Y = ((c8_OP & 0x00F0) >> 4);
+	switch((c8_OP & 0xF000) >> 12){
+		case 0x0: c8_INSTR = c8_opcode0_lut[(c8_OP & 0xF)]; break;
+		case 0x1: c8_INSTR = c8_1NNN; break;
+		case 0x2: c8_INSTR = c8_2NNN; break;
+		case 0x3: c8_INSTR = c8_3XKK; break;
+		case 0x4: c8_INSTR = c8_4XKK; break;
+		case 0x5: c8_INSTR = c8_5XY0; break;
+		case 0x6: c8_INSTR = c8_6XKK; break;
+		case 0x7: c8_INSTR = c8_7XKK; break;
+		case 0x8: c8_INSTR = c8_opcode8_lut[(c8_OP & 0xF)]; break;
+		case 0x9: c8_INSTR = c8_9XY0; break;
+		case 0xA: c8_INSTR = c8_ANNN; break;
+		case 0xB: c8_INSTR = c8_BNNN; break;
+		case 0xC: c8_INSTR = c8_CXKK; break;
+		case 0xD: c8_INSTR = c8_DXYN; break;
+		case 0xE: c8_INSTR = c8_opcodeE_lut[(c8_OP & 0xF)]; break;
+		case 0xF: c8_INSTR = c8_opcodeF_lut[(c8_OP & 0xFF)]; break;
+		default: c8_INSTR = c8_INVOP;
+	}
 }
 
 void c8_update_timer(){
