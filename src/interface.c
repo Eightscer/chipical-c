@@ -1,16 +1,4 @@
 #include "interface.h"
-//#include "chip.h"
-
-/*
-SDL_Window* gfx_win;
-SDL_Renderer* render;
-SDL_Texture* texture;
-size_t scaling;
-uint32_t cycles_until_update;
-WINDOW* debug_win;
-int debug_enable;
-int c8_pause = 0;
-*/
 
 SDL_Keycode default_keypad_mapping[16] = {
 	SDLK_x, SDLK_1, SDLK_2, SDLK_3,
@@ -22,15 +10,12 @@ SDL_Keycode default_keypad_mapping[16] = {
 int interface_init(chip8_emulator* emu, char* filename){
 	emu->gfx_scaling = 8;
 	emu->cycles_until_update = 1;
-	emu->prev_key = 0;
-	emu->curr_key = 0;
-	//printf("keypad mapping init\n");
+	emu->prev_pressed = 0;
+	emu->prev_release = 0;
+	emu->pause_rel = 1;
 	memcpy(emu->keypad_mapping, default_keypad_mapping, sizeof(SDL_Keycode)*16);
-	//printf("chip8 init\n");
 	emu->c8 = c8_create_system();
 	if(c8_init(emu->c8, filename, NULL)) printf("error with c8 init\n");
-	//initscr();
-	//printf("debug init\n");
 	if(COLS < 80 || LINES < 24){
 		printf("Please resize terminal for debugging info (80x24)\n");
 		printf("%d, %d\n", COLS, LINES);
@@ -40,8 +25,6 @@ int interface_init(chip8_emulator* emu, char* filename){
 		emu->debug_enable = 1;
 		init_debug(emu);
 	}
-	//SDL_Init(SDL_INIT_VIDEO);
-	//printf("sdl gfx window init\n");
 	emu->gfx_win = SDL_CreateWindow("Chipical", 0, 0, emu->c8->scrw*emu->gfx_scaling,
 		emu->c8->scrh*emu->gfx_scaling, SDL_WINDOW_SHOWN);
 	emu->render = SDL_CreateRenderer(emu->gfx_win, -1, SDL_RENDERER_ACCELERATED); //SDL_RENDERER_SOFTWARE
@@ -60,8 +43,6 @@ void interface_deinit(chip8_emulator* emu){
 		free(emu);
 		emu = NULL;
 	}
-	//endwin();
-	//SDL_Quit();
 }
 
 void update_gfx(chip8_emulator* emu){
@@ -85,20 +66,32 @@ int keypad_input(chip8_emulator* emu){
 				q = 1;
 			} break;
 			case SDL_KEYDOWN: {
-				emu->prev_key = emu->curr_key;
-				emu->curr_key = e.key.keysym.sym;
-				uint8_t kp;
-				if(emu->curr_key == SDLK_ESCAPE){ q = 1; break; }
-				for(kp = 0; kp < 16; ++kp){
-					if(emu->curr_key == emu->keypad_mapping[kp]){
-						emu->c8->state.keypad[kp] = 1;
-						//break;
+				SDL_Keycode k = e.key.keysym.sym;
+				emu->prev_pressed = k;
+				if(k == SDLK_p && emu->pause_rel){
+					if(emu->c8->st == RUNNING){
+						emu->c8->st = PAUSED;
+						emu->pause_rel = 0;
+						break;
+					}
+					if(emu->c8->st == PAUSED){
+						emu->c8->st = RUNNING;
+						emu->pause_rel = 0;
+						break;
 					}
 				}
-				//printf("press   %d\n", kp);
+				uint8_t kp;
+				if(k == SDLK_ESCAPE){ q = 1; break; }
+				for(kp = 0; kp < 16; ++kp){
+					if(k == emu->keypad_mapping[kp]){
+						emu->c8->state.keypad[kp] = 1;
+					}
+				}
 			} break;
 			case SDL_KEYUP: {
 				SDL_Keycode k = e.key.keysym.sym;
+				emu->prev_release = k;
+				if(k == SDLK_p) emu->pause_rel = 1;
 				uint8_t kp;
 				for(kp = 0; kp < 16; ++kp){
 					if(k == emu->keypad_mapping[kp]){
@@ -106,7 +99,6 @@ int keypad_input(chip8_emulator* emu){
 						//break;
 					}
 				}
-				//printf("release %d\n", kp);
 			} break;
 		}
 	}

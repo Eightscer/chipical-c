@@ -14,13 +14,14 @@ typedef struct {
 	SDL_Window* gfx_win;
 	SDL_Renderer* render;
 	SDL_Texture* texture;
-	SDL_Keycode curr_key, prev_key;
+	SDL_Keycode prev_pressed, prev_release;
 	SDL_Keycode keypad_mapping[16];
 	uint32_t gfx_scaling;
 	uint32_t cycles_until_update;
 	int debug_enable;
 	WINDOW* debug_win;
 	chip8_system* c8;
+	int pause_rel;
 } chip8_emulator;
 
 WINDOW* new_win(int h, int w, int sy, int sx);
