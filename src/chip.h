@@ -23,6 +23,16 @@ typedef enum {
 	UNKNOWN_OPCODE
 } c8_exception;
 
+typedef enum {
+	S_I = 0,
+	S_PC,
+	S_REG,
+	S_KEY,
+	S_STACK,
+	S_TIMER,
+	S_SP
+} c8_state_change;
+
 typedef struct chip8_state chip8_state;
 typedef struct chip8_system chip8_system;
 
@@ -53,6 +63,7 @@ typedef struct chip8_system {
 	uint8_t font[16*5];
 	uint8_t scrw, scrh;
 	uint32_t color0, color1;
+	//uint8_t change[8];
 	op opcodes_LUT[0x10];
 	op opcode0_LUT[0x10];
 	op opcode8_LUT[0x10];
@@ -120,6 +131,9 @@ void c8_FX33(chip8_system* c8);
 void c8_FX55(chip8_system* c8);
 void c8_FX65(chip8_system* c8);
 
+void c8T_FX55(chip8_system* c8);
+void c8T_FX65(chip8_system* c8);
+
 /*
 void sc48_00CN();
 void sc48_00FB();
@@ -131,41 +145,6 @@ void sc48_DXY0();
 void sc48_FX30();
 void sc48_FX75();
 void sc48_FX85();
-*/
-
-//extern c8_exception c8_ex;
-//extern op c8_INSTR;
-
-//extern float c8_delay_freq;
-//extern uint32_t c8_cps;
-
-/*
-extern uint16_t c8_I, c8_PC;
-extern uint8_t c8_VX[16];
-extern uint8_t c8_SP, c8_DELAY, c8_SOUND;
-extern uint16_t c8_STACK[16];
-extern uint8_t c8_keypad[16];
-extern uint8_t c8_font[16*5];
-extern uint16_t c8_font_start;
-
-extern uint16_t c8_OP;
-extern uint8_t c8_X;
-extern uint8_t c8_Y;
-
-extern op c8_opcodes_lut[0x10];
-extern op c8_opcode0_lut[0x10];
-extern op c8_opcode8_lut[0x10];
-extern op c8_opcodeE_lut[0x10];
-extern op c8_opcodeF_lut[0x100];
-
-extern uint8_t* c8_RAM;
-extern uint32_t* c8_VRAM;
-
-extern uint8_t c8_scrw;
-extern uint8_t c8_scrh;
-
-extern uint32_t c8_0_color;
-extern uint32_t c8_1_color;
 */
 
 #endif
