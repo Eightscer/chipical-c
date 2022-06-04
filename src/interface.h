@@ -21,12 +21,16 @@ typedef struct {
 	int debug_enable;
 	WINDOW* debug_win;
 	chip8_system* c8;
-	int pause_rel;
+	chip8_state prev_state;
+	uint8_t change[8];
+	int pause_rel, debug_rel;
+	int debug_toggle;
 } chip8_emulator;
 
 WINDOW* new_win(int h, int w, int sy, int sx);
 void rm_win(WINDOW* win);
 void update_debug(chip8_emulator* emu);
+void update_prev_state(chip8_emulator* emu);
 void init_debug(chip8_emulator* emu);
 void handle_exception(chip8_emulator* emu);
 

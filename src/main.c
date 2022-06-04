@@ -33,7 +33,7 @@ int main(int argc, char** argv){
 				continue;
 			}
 			update_gfx(emu);
-			if(emu->debug_enable){
+			if(emu->debug_enable && emu->debug_toggle){
 				++dcc;
 				if(dcc >= emu->cycles_until_update){
 					update_debug(emu);
@@ -48,7 +48,9 @@ int main(int argc, char** argv){
 			}
 			usleep(CLOCKS_PER_SEC/emu->c8->cycles_per_sec);
 		} else { 
-			usleep(1000); update_debug(emu); q = keypad_input(emu);
+			usleep(1000);
+			if(emu->debug_enable) update_debug(emu);
+			q = keypad_input(emu);
 		}
 	}
 

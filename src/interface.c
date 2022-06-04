@@ -13,6 +13,8 @@ int interface_init(chip8_emulator* emu, char* filename){
 	emu->prev_pressed = 0;
 	emu->prev_release = 0;
 	emu->pause_rel = 1;
+	emu->debug_rel = 1;
+	emu->debug_toggle = 1;
 	memcpy(emu->keypad_mapping, default_keypad_mapping, sizeof(SDL_Keycode)*16);
 	emu->c8 = c8_create_system();
 	if(c8_init(emu->c8, filename, NULL)) printf("error with c8 init\n");
@@ -62,12 +64,16 @@ int keypad_input(chip8_emulator* emu){
 	
 	while(SDL_PollEvent(&e)){
 		switch(e.type){
+		
 			case SDL_QUIT: {
 				q = 1;
 			} break;
+			
 			case SDL_KEYDOWN: {
 				SDL_Keycode k = e.key.keysym.sym;
 				emu->prev_pressed = k;
+
+				// Pause toggle
 				if(k == SDLK_p && emu->pause_rel){
 					if(emu->c8->st == RUNNING){
 						emu->c8->st = PAUSED;
@@ -80,26 +86,48 @@ int keypad_input(chip8_emulator* emu){
 						break;
 					}
 				}
+
+				// Debug toggle
+				if(k == SDLK_y && emu->debug_rel){
+					if(emu->debug_toggle == 1){
+						emu->debug_toggle = 0;
+						emu->debug_rel = 0;
+						break;
+					}
+					if(emu->debug_toggle == 0){
+						emu->debug_toggle = 1;
+						emu->debug_rel = 0;
+						break;
+					}
+				}
+
 				uint8_t kp;
 				if(k == SDLK_ESCAPE){ q = 1; break; }
 				for(kp = 0; kp < 16; ++kp){
 					if(k == emu->keypad_mapping[kp]){
 						emu->c8->state.keypad[kp] = 1;
+						emu->change[S_KEY] = 1;
 					}
 				}
 			} break;
+			
 			case SDL_KEYUP: {
 				SDL_Keycode k = e.key.keysym.sym;
 				emu->prev_release = k;
+				
 				if(k == SDLK_p) emu->pause_rel = 1;
+				if(k == SDLK_y) emu->debug_rel = 1;
+				
 				uint8_t kp;
 				for(kp = 0; kp < 16; ++kp){
 					if(k == emu->keypad_mapping[kp]){
 						emu->c8->state.keypad[kp] = 0;
+						emu->change[S_KEY] = 1;
 						//break;
 					}
 				}
 			} break;
+			
 		}
 	}
 
@@ -120,12 +148,26 @@ void rm_win(WINDOW* win){
 }
 
 void init_debug(chip8_emulator* emu){
-	int i, r, c;
+
+	int i;
+	emu->prev_state.i = 0;
+	emu->prev_state.pc = 0;
+	emu->prev_state.sp = 0;
+	emu->prev_state.delay = 0;
+	emu->prev_state.sound = 0;
+	for(i = 0; i < 16; ++i){
+		emu->prev_state.reg[i] = 0;
+		emu->prev_state.keypad[i] = 0;
+		emu->prev_state.stack[i] = 0;
+	}
+
+	int r, c;
 	r = 1; c = 5;
 	mvprintw(r, c, "REGISTERS");
 	++r;
 	for(i = 0; i < 16; ++i){
 		mvprintw(r+i, c, "V%01X:", i);
+		mvprintw(r+i, c+5, "%02X", emu->c8->state.reg[i]);
 		//mvprintw(r+i, c+5, "%02X", c8_VX[i]);
 	}
 
@@ -133,47 +175,27 @@ void init_debug(chip8_emulator* emu){
 	mvprintw(1+r, c, "DELAY:");
 	mvprintw(2+r, c, "SOUND:");
 	mvprintw(4+r, c, "  I:");
+	mvprintw(1+r, 7+c, "%03d", emu->c8->state.delay);
+	mvprintw(2+r, 7+c, "%03d", emu->c8->state.sound);
+	mvprintw(4+r, 5+c, "%04X", emu->c8->state.i);
 
 	r = 1; c = 20;
 	mvprintw(r, c, "STACK");
+	++r;
+	for(i = 0; i < 16; ++i){
+		mvprintw(r+i, c, "%02X", emu->c8->state.stack[i]);
+	}
 
+	r = 18; c = 20;
+	mvprintw(2+r, 4+c, "%04X", emu->c8->o);
+	mvprintw(3+r, 4+c, "%04X", emu->c8->state.pc);
 	r = 18;
 	mvprintw(2+r, c, "OP:");
 	mvprintw(3+r, c, "PC:");
 
 	c = 30; r = 4; i = 0;
 	mvprintw(r, c, "KEYPAD");
-	
-	wrefresh(emu->debug_win);
-	refresh();
-	//mvprintw()
-}
-
-void update_debug(chip8_emulator* emu){
-	int i, r, c;
-	r = 1; c = 5;
-	++r;
-	for(i = 0; i < 16; ++i){
-		mvprintw(r+i, c+5, "%02X", emu->c8->state.reg[i]);
-	}
-
-	r = 18;
-	mvprintw(1+r, 7+c, "%03d", emu->c8->state.delay);
-	mvprintw(2+r, 7+c, "%03d", emu->c8->state.sound);
-	mvprintw(4+r, 5+c, "%04X", emu->c8->state.i);
-
-	r = 1; c = 20;
-	//mvprintw(r, c, "STACK");
-	++r;
-	for(i = 0; i < 16; ++i){
-		mvprintw(r+i, c, "%02X", emu->c8->state.stack[i]);
-	}
-
-	r = 18;
-	mvprintw(2+r, 4+c, "%04X", emu->c8->o);
-	mvprintw(3+r, 4+c, "%04X", emu->c8->state.pc);
-
-	c = 30; r = 5; i = 0;
+	c = 30; r = 5;
 	mvprintw(2+r, c, "%01X %01X %01X %01X",
 		emu->c8->state.keypad[0x1], emu->c8->state.keypad[0x2],
 		emu->c8->state.keypad[0x3], emu->c8->state.keypad[0xC]);
@@ -187,6 +209,65 @@ void update_debug(chip8_emulator* emu){
 		emu->c8->state.keypad[0xA], emu->c8->state.keypad[0x0],
 		emu->c8->state.keypad[0xB], emu->c8->state.keypad[0xF]);
 	
+	wrefresh(emu->debug_win);
+	refresh();
+	//mvprintw()
+}
+
+void update_debug(chip8_emulator* emu){
+	int i, r, c;
+	r = 1; c = 5;
+
+	update_prev_state(emu);
+
+	if(emu->change[S_REG]){
+		++r;
+		for(i = 0; i < 16; ++i){
+			mvprintw(r+i, c+5, "%02X", emu->c8->state.reg[i]);
+		}	
+	}
+
+	if(emu->change[S_TIMER]){
+		r = 18;
+		mvprintw(1+r, 7+c, "%03d", emu->c8->state.delay);
+		mvprintw(2+r, 7+c, "%03d", emu->c8->state.sound);
+	}
+
+	if(emu->change[S_I]){
+		r = 18;
+		mvprintw(4+r, 5+c, "%04X", emu->c8->state.i);
+	}
+
+	if(emu->change[S_SP]){
+		r = 1; c = 20;
+		++r;
+		for(i = 0; i < 16; ++i){
+			mvprintw(r+i, c, "%02X", emu->c8->state.stack[i]);
+		}
+	}
+	
+	r = 18; c = 20;
+	mvprintw(2+r, 4+c, "%04X", emu->c8->o);
+	mvprintw(3+r, 4+c, "%04X", emu->c8->state.pc);
+
+	if(emu->change[S_KEY]){
+		c = 30; r = 5;
+		mvprintw(2+r, c, "%01X %01X %01X %01X",
+			emu->c8->state.keypad[0x1], emu->c8->state.keypad[0x2],
+			emu->c8->state.keypad[0x3], emu->c8->state.keypad[0xC]);
+		mvprintw(4+r, c, "%01X %01X %01X %01X",
+			emu->c8->state.keypad[0x4], emu->c8->state.keypad[0x5],
+			emu->c8->state.keypad[0x6], emu->c8->state.keypad[0xD]);
+		mvprintw(6+r, c, "%01X %01X %01X %01X",
+			emu->c8->state.keypad[0x7], emu->c8->state.keypad[0x8],
+			emu->c8->state.keypad[0x9], emu->c8->state.keypad[0xE]);
+		mvprintw(8+r, c, "%01X %01X %01X %01X",
+			emu->c8->state.keypad[0xA], emu->c8->state.keypad[0x0],
+			emu->c8->state.keypad[0xB], emu->c8->state.keypad[0xF]);
+	}
+
+	for(i = 0; i < 8; ++i){ emu->change[i] = 0; }
+
 	wrefresh(emu->debug_win);
 	refresh();
 }
@@ -217,4 +298,43 @@ void handle_exception(chip8_emulator* emu){
 		refresh();
 	}
 	emu->c8->st = EXCEPTION;
+}
+
+void update_prev_state(chip8_emulator* emu){
+	int i;
+	if(emu->c8->state.i != emu->prev_state.i){
+		emu->prev_state.i = emu->c8->state.i;
+		emu->change[S_I] = 1;
+	}
+	if(emu->c8->state.pc != emu->prev_state.pc){
+		emu->prev_state.pc = emu->c8->state.pc;
+		emu->change[S_PC] = 1;
+	}
+	if(emu->c8->state.sp != emu->prev_state.sp){
+		emu->prev_state.sp = emu->c8->state.sp;
+		emu->change[S_SP] = 1;
+		for(i = 0; i < 16; ++i){
+			emu->prev_state.stack[i] = emu->c8->state.stack[i];
+		}
+	}
+	if(emu->c8->state.delay != emu->prev_state.delay){
+		emu->prev_state.delay = emu->c8->state.delay;
+		emu->change[S_TIMER] = 1;
+	}
+	if(emu->c8->state.sound != emu->prev_state.sound){
+		emu->prev_state.sound = emu->c8->state.sound;
+		emu->change[S_TIMER] = 1;
+	}
+	for(i = 0; i < 16; ++i){
+		if(emu->c8->state.reg[i] != emu->prev_state.reg[i]){
+			emu->prev_state.reg[i] = emu->c8->state.reg[i];
+			emu->change[S_REG] = 1;
+		}
+		/*
+		if(emu->c8->state.keypad[i] != emu->prev_state.keypad[i]){
+			emu->prev_state.keypad[i] = emu->c8->state.keypad[i];
+			emu->change[S_KEY] = 1;
+		}
+		*/
+	}
 }
