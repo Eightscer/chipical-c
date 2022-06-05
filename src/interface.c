@@ -10,11 +10,15 @@ SDL_Keycode default_keypad_mapping[16] = {
 int interface_init(chip8_emulator* emu, char* filename){
 	emu->gfx_scaling = 8;
 	emu->cycles_until_update = 1;
+	
 	emu->prev_pressed = 0;
 	emu->prev_release = 0;
 	emu->pause_rel = 1;
 	emu->debug_rel = 1;
 	emu->debug_toggle = 1;
+	emu->ff_hold = 0;
+	emu->slow_hold = 0;
+
 	memcpy(emu->keypad_mapping, default_keypad_mapping, sizeof(SDL_Keycode)*16);
 	emu->c8 = c8_create_system();
 	if(c8_init(emu->c8, filename, NULL)) printf("error with c8 init\n");
@@ -27,6 +31,12 @@ int interface_init(chip8_emulator* emu, char* filename){
 		emu->debug_enable = 1;
 		init_debug(emu);
 	}
+
+	emu->orig_cpc = emu->c8->cycles_per_sec;
+	emu->orig_freq = emu->c8->delay_freq;
+	emu->speed_scaling = 1.0;
+	emu->speed_factor = 4.0;
+	
 	emu->gfx_win = SDL_CreateWindow("Chipical", 0, 0, emu->c8->scrw*emu->gfx_scaling,
 		emu->c8->scrh*emu->gfx_scaling, SDL_WINDOW_SHOWN);
 	emu->render = SDL_CreateRenderer(emu->gfx_win, -1, SDL_RENDERER_ACCELERATED); //SDL_RENDERER_SOFTWARE
@@ -101,6 +111,22 @@ int keypad_input(chip8_emulator* emu){
 					}
 				}
 
+				// Fast forward hold
+				if(k == SDLK_l && emu->ff_hold == 0){
+					emu->ff_hold = 1;
+					emu->speed_scaling *= emu->speed_factor;
+					rescale_speed(emu, emu->speed_scaling);
+					break;
+				}
+
+				// Slow down hold
+				if(k == SDLK_k && emu->slow_hold == 0){
+					emu->slow_hold = 1;
+					emu->speed_scaling /= emu->speed_factor;
+					rescale_speed(emu, emu->speed_scaling);
+					break;
+				}
+
 				uint8_t kp;
 				if(k == SDLK_ESCAPE){ q = 1; break; }
 				for(kp = 0; kp < 16; ++kp){
@@ -117,6 +143,18 @@ int keypad_input(chip8_emulator* emu){
 				
 				if(k == SDLK_p) emu->pause_rel = 1;
 				if(k == SDLK_y) emu->debug_rel = 1;
+				if(k == SDLK_l){
+					emu->ff_hold = 0;
+					emu->speed_scaling /= emu->speed_factor;
+					rescale_speed(emu, emu->speed_scaling);
+					//break;
+				}
+				if(k == SDLK_k){
+					emu->slow_hold = 0;
+					emu->speed_scaling *= emu->speed_factor;
+					rescale_speed(emu, emu->speed_scaling);
+					//break;
+				}
 				
 				uint8_t kp;
 				for(kp = 0; kp < 16; ++kp){
@@ -193,7 +231,7 @@ void init_debug(chip8_emulator* emu){
 	mvprintw(2+r, c, "OP:");
 	mvprintw(3+r, c, "PC:");
 
-	c = 30; r = 4; i = 0;
+	c = 30; r = 4;
 	mvprintw(r, c, "KEYPAD");
 	c = 30; r = 5;
 	mvprintw(2+r, c, "%01X %01X %01X %01X",
@@ -208,7 +246,7 @@ void init_debug(chip8_emulator* emu){
 	mvprintw(8+r, c, "%01X %01X %01X %01X",
 		emu->c8->state.keypad[0xA], emu->c8->state.keypad[0x0],
 		emu->c8->state.keypad[0xB], emu->c8->state.keypad[0xF]);
-	
+
 	wrefresh(emu->debug_win);
 	refresh();
 	//mvprintw()
@@ -264,7 +302,7 @@ void update_debug(chip8_emulator* emu){
 		mvprintw(8+r, c, "%01X %01X %01X %01X",
 			emu->c8->state.keypad[0xA], emu->c8->state.keypad[0x0],
 			emu->c8->state.keypad[0xB], emu->c8->state.keypad[0xF]);
-	}
+	}	
 
 	for(i = 0; i < 8; ++i){ emu->change[i] = 0; }
 
@@ -337,4 +375,10 @@ void update_prev_state(chip8_emulator* emu){
 		}
 		*/
 	}
+}
+
+void rescale_speed(chip8_emulator* emu, float factor){
+	emu->c8->cycles_per_sec = emu->orig_cpc*factor;
+	emu->c8->delay_freq = emu->orig_freq/factor;
+	//printf("sc: %f, f: %f", emu->speed_scaling, emu->speed_factor);
 }
