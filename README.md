@@ -15,6 +15,8 @@ Standard keypad mappings. {X, 1, 2, 3, Q, W, E, A, S, D, Z, C, 4, R, F, V} maps 
 
 Pressing P will toggle between pausing and continuing execution. Pressing ESC will quit the program (when the SDL window is focused).
 
+Holding L will speed up emulation, while holding K will slow down emulation. This also scales the rate at which the delay and sound timers count down appropriately.
+
 The emulator will halt when an 'exception' occurs, with the only option being to press ESC to quit. An exception occurs when the program is invoking strange or unintended behavior (e.g. stack overflow, unknown opcode, index out of bounds, program counter out of bounds).
 
 ## Configuration
@@ -36,10 +38,8 @@ Currently, there is no way to configure the emulator's options at runtime. If yo
 ### Likely
 
 - Save states
-- Optimize debugger interface
 - Configuration file support (JSON?)
 - Configuration menu using ncurses
-- Fast forwarding
 
 ### Unlikely
 
@@ -48,3 +48,8 @@ Currently, there is no way to configure the emulator's options at runtime. If yo
 - Pedantic compatibility options (e.g. different opcode behavior for older machines)
 - Sound
 - Rewinding
+
+## Current Issues
+
+- The debugger window consumes a lot of CPU usage while active (about 4-5 times more than the interpreter itself according to `htop`), even after modifying the code to only print when changes are made.
+- Speed scaling seems slightly off, it appears empirically that the scaling factor is about 1 off than intended (i.e. when fast forwarding with a scale of 4.0, it will appear to run only 3 times faster instead of 4).
