@@ -53,3 +53,4 @@ Currently, there is no way to configure the emulator's options at runtime. If yo
 
 - The debugger window consumes a lot of CPU usage while active (about 4-5 times more than the interpreter itself according to `htop`), even after modifying the code to only print when changes are made.
 - Speed scaling seems slightly off, it appears empirically that the scaling factor is about 1 off than intended (i.e. when fast forwarding with a scale of 4.0, it will appear to run only 3 times faster instead of 4).
+- Random memory leaks (?) and segfaults everywhere
