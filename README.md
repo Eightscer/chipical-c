@@ -1,4 +1,6 @@
-# chipical
+# chipical-c
+Note: This is an old version of chipical I had originally written in C. It has since been rewritten in Zig located under another repository of the same name.
+
 CHIP8 emulator with ncurses (for debugging information on terminal) and SDL2 (for graphics). Developed for Linux.
 
 Passes corax89's and BestCoder's test ROMs.
